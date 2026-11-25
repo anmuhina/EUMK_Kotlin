@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раздел 4. Тестирование, отладка и публикация приложений</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>ЭУМК Kotlin</h2>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="rup.html">Рабочая программа</a>
+            <a href="section1.html">Раздел 1. Основы Kotlin</a>
+            <a href="section2.html">Раздел 2. Jetpack Compose</a>
+            <a href="section3.html">Раздел 3. Room, Retrofit</a>
+            <a href="section4.html" class="active">Раздел 4. Тестирование</a>
+            <a href="tests.html">Тестовые задания</a>
+            <a href="practice.html">Практические задания</a>
+            <a href="literature.html">Список источников</a>
+            <a href="about.html">Об авторе</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Раздел 4. Тестирование, отладка и публикация приложений</h1>
+
+        <h2>4.1. Роль тестирования в разработке мобильных приложений</h2>
+        <p>Тестирование — неотъемлемая часть профессиональной разработки. Оно позволяет обнаруживать дефекты на ранних этапах, защищает от регрессий при изменении кода и документирует ожидаемое поведение. В Android принято разделять тесты по уровню (пирамида тестирования): <strong>модульные (unit)</strong> — большинство, быстрые и дешёвые; <strong>интеграционные</strong> — проверяют взаимодействие компонентов; <strong>UI-тесты (instrumented)</strong> — проверяют интерфейс на устройстве/эмуляторе, самые медленные и дорогие. Хорошая стратегия — покрывать модульными тестами бизнес-логику (ViewModel, Repository) и использовать UI-тесты для ключевых сценариев.</p>
+
+        <h2>4.2. Модульные (unit) тесты</h2>
+        <p>Модульные тесты проверяют отдельные функции и классы в изоляции, без Android-устройства, на JVM. Они выполняются быстро (секунды) и запускаются в IDE и на CI. Фреймворк — <strong>JUnit</strong> (аннотации <code>@Test</code>, <code>@Before</code>, <code>@After</code>, <code>@BeforeClass</code>; утверждения <code>assertEquals</code>, <code>assertTrue</code>, <code>assertThrows</code>).</p>
+        <pre><code>class Calculator {
+    fun add(a: Int, b: Int) = a + b
+}
+
+class CalculatorTest {
+    @Test
+    fun testAddition() {
+        val result = Calculator().add(2, 3)
+        assertEquals(5, result)
+    }
+}</code></pre>
+        <p><strong>Тестирование корутин.</strong> Для <code>suspend</code>-функций используется <code>runTest</code> из <code>kotlinx-coroutines-test</code>, который управляет виртуальным временем и позволяет тестировать <code>delay</code> без реального ожидания. Для <code>Flow</code> применяется <code>turbine</code> (библиотека) или ручной сбор. Тестирование ViewModel с <code>StateFlow</code> — через <code>runTest</code> и проверку эмитированных значений.</p>
+        <pre><code>@Test
+fun `state emits Success on load`() = runTest {
+    val vm = UserViewModel(FakeRepository())
+    vm.load("1")
+    advanceUntilIdle()
+    assertTrue(vm.state.value is UiState.Success)
+}</code></pre>
+        <p><strong>Тестовые дублёры.</strong> Внешние зависимости (сеть, БД) заменяются <strong>фейками</strong> (простые реализации интерфейсов) или <strong>моками</strong> (Mockito/MockK). Это позволяет тестировать логику без реальных сетевых вызовов и делает тесты детерминированными.</p>
+
+        <h2>4.3. UI-тесты (instrumented)</h2>
+        <p>UI-тесты запускаются на реальном устройстве или эмуляторе и проверяют взаимодействие пользователя с интерфейсом: нажатия, ввод текста, отображение элементов. В Compose используется библиотека <strong>Compose Testing</strong> (<code>createComposeRule</code>, <code>onNodeWithText</code>, <code>performClick</code>, <code>assertIsDisplayed</code>), в классических View — <strong>Espresso</strong>. UI-тесты медленнее и требовательнее к окружению, поэтому их количество ограничивают ключевыми сценариями.</p>
+        <pre><code>@get:Rule
+val composeRule = createComposeRule()
+
+@Test
+fun buttonClick_showsText() {
+    composeRule.setContent { SimpleInputScreen() }
+    composeRule.onNodeWithText("Введите текст").performTextInput("Привет")
+    composeRule.onNodeWithText("Показать").performClick()
+    composeRule.onNodeWithText("Привет").assertIsDisplayed()
+}</code></pre>
+
+        <h2>4.4. Отладка в Android Studio</h2>
+        <p><strong>Logcat.</strong> Основной инструмент диагностики. Логи пишутся через <code>Log.d/i/w/e(tag, message)</code> и фильтруются по тегу, уровню, процессу. Logcat показывает стектрейсы исключений, системные сообщения и логи сторонних библиотек. В продакшене логирование ограничивают и не выводят персональные данные.</p>
+        <p><strong>Отладчик (Debugger).</strong> Позволяет ставить точки останова (breakpoints), выполнять код по шагам (step over/into/out), просматривать значения переменных, вычислять выражения (Evaluate Expression) и анализировать стек вызовов. Условные точки останова останавливают выполнение только при заданном условии.</p>
+        <p><strong>Layout Inspector.</strong> Показывает дерево UI в реальном времени, свойства элементов и их размеры — полезно для диагностики проблем верстки.</p>
+        <p><strong>Профилировщики (Profiler).</strong> CPU Profiler выявляет «тяжелые» методы, Memory Profiler — утечки памяти, Network Profiler — сетевые запросы и их размер, Energy Profiler — энергопотребление. Профилирование помогает оптимизировать производительность и не допускать ANR (Application Not Responding).</p>
+        <p><strong>Типичные проблемы.</strong> <code>NullPointerException</code> (нарушение null-безопасности через <code>!!</code>), утечки памяти (ссылки на Activity из статических полей, неотменённые корутины), ANR (долгие операции в главном потоке), <code>NetworkOnMainThreadException</code> (сетевые вызовы без <code>Dispatchers.IO</code>).</p>
+
+        <h2>4.5. Подготовка приложения к публикации</h2>
+        <p><strong>Сборка APK/AAB.</strong> Android Studio собирает <strong>APK</strong> (устанавливаемый файл) и <strong>AAB</strong> (Android App Bundle) — формат, обязательный для публикации в Google Play с 2021 года. AAB содержит все ресурсы и код, а Google Play генерирует оптимизированные APK под каждое устройство (split APK), что уменьшает размер загрузки.</p>
+        <p><strong>Подпись.</strong> Приложение должно быть подписано криптографическим ключом. Для отладки используется debug-ключ, для публикации — release-ключ (keystore). Ключ и пароли хранятся в защищённом месте и не попадают в репозиторий. Настройка подписи выполняется в <code>build.gradle.kts</code> через <code>signingConfigs</code>.</p>
+        <pre><code>android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.keystore")
+            storePassword = System.getenv("STORE_PASSWORD")
+            keyAlias = "release"
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}</code></pre>
+        <p><strong>Minify и shrinkResources.</strong> R8/ProGuard удаляет неиспользуемый код и обфусцирует имена, уменьшая размер APK и затрудняя реверс-инжиниринг. <code>shrinkResources</code> удаляет неиспользуемые ресурсы. При обфускации нужно сохранять правила (<code>proguard-rules.pro</code>) для библиотек, использующих рефлексию.</p>
+        <p><strong>Версионирование.</strong> В <code>build.gradle.kts</code> задаются <code>versionCode</code> (целое число, увеличивается с каждой публикацией) и <code>versionName</code> (строка для пользователей, например «1.0.0»). Google Play требует, чтобы <code>versionCode</code> монотонно возрастал.</p>
+
+        <h2>4.6. Публикация в Google Play</h2>
+        <p>Процесс публикации:</p>
+        <ol>
+            <li>Создание аккаунта разработчика (единоразовый платёж) и принятие соглашений.</li>
+            <li>Создание приложения в Play Console: название, описание, категория, контент-рейтинг, политика конфиденциальности.</li>
+            <li>Подготовка ресурсов: иконка, скриншоты, feature graphic, промо-тексты.</li>
+            <li>Загрузка AAB в выбранный трек: internal testing → closed testing → open testing → production. Поэтапное тестирование снижает риски.</li>
+            <li>Заполнение карточки: описание, скриншоты, возрастной рейтинг, данные о сборе данных (Data Safety).</li>
+            <li>Отправка на проверку (review) — модерация Google занимает от нескольких часов до нескольких дней.</li>
+            <li>Публикация и мониторинг: анализ отзывов, крашей (Android Vitals), обновления.</li>
+        </ol>
+        <p><strong>Требования Google Play:</strong> целевой API level должен соответствовать актуальным требованиям; обязательна политика конфиденциальности при сборе данных; запрещены опасные разрешения без обоснования; приложение не должно нарушать политики (спам, вредоносное ПО, нарушения прав).</p>
+
+        <h2>4.7. Основы CI/CD для мобильных проектов</h2>
+        <p><strong>CI (Continuous Integration)</strong> — автоматическая сборка и тестирование при каждом коммите. <strong>CD (Continuous Delivery/Deployment)</strong> — автоматическая доставка сборок в треки Google Play. Популярные инструменты: <strong>GitHub Actions</strong>, <strong>GitLab CI</strong>, <strong>Bitrise</strong>, <strong>Jenkins</strong>. Типичный пайплайн: checkout → сборка → unit-тесты → lint → сборка release AAB → (опционально) публикация в internal testing. Секреты (ключи подписи, токены) хранятся в защищённых переменных CI, а не в репозитории.</p>
+        <pre><code># Пример фрагмента GitHub Actions
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
+      - run: ./gradlew test
+      - run: ./gradlew bundleRelease</code></pre>
+
+        <h2>4.8. Управление версиями и совместная работа</h2>
+        <p><strong>Git</strong> — распределённая система контроля версий. Базовые команды: <code>git init</code>, <code>git add</code>, <code>git commit</code>, <code>git push</code>, <code>git pull</code>, <code>git branch</code>, <code>git merge</code>, <code>git rebase</code>. В Android-проектах используется <code>.gitignore</code> для исключения <code>build/</code>, <code>.gradle/</code>, <code>local.properties</code>, <code>*.keystore</code>. Рекомендуемые практики: осмысленные сообщения коммитов, ветвление (feature branches), код-ревью через pull/merge requests, теги для релизов.</p>
+
+                <h2>Контрольные вопросы</h2>
+        <div class="question">
+            <p><strong>1.</strong> Чем unit-тест отличается от UI-теста?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Unit-тест проверяет код на JVM без устройства, UI-тест — интерфейс на устройстве/эмуляторе.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>2.</strong> Что делает аннотация <code>@Test</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Помечает метод как тестовый.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>3.</strong> Что делает <code>@Before</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Выполняется перед каждым тестом (подготовка).</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>4.</strong> Для чего нужен Logcat?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Для просмотра логов и ошибок приложения.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>5.</strong> Чем APK отличается от AAB?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> APK — готовый файл для установки, AAB — формат для публикации в Google Play (Play сам собирает APK).</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>6.</strong> Зачем нужна подпись приложения?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Подтверждает авторство и целостность; без неё нельзя опубликовать и обновлять приложение.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>7.</strong> Что такое CI/CD?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Автоматическая сборка, тестирование и доставка приложения.</div>
+            </details>
+        </div>
+
+        <h2>Упражнения для самостоятельной работы</h2>
+        <div class="exercise">
+            <p><strong>Упражнение 1.</strong> Напишите unit-тест для функции сложения двух чисел.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>class Calculator {
+    fun add(a: Int, b: Int) = a + b
+}
+
+class CalculatorTest {
+    @Test
+    fun `add returns sum`() {
+        assertEquals(5, Calculator().add(2, 3))
+    }
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 2.</strong> Напишите UI-тест: после нажатия кнопки на экране появляется текст.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>@get:Rule
+val composeRule = createComposeRule()
+
+@Test
+fun clickButton_displaysText() {
+    composeRule.setContent { SimpleInputScreen() }
+    composeRule.onNodeWithText("Введите текст").performTextInput("Kotlin")
+    composeRule.onNodeWithText("Показать").performClick()
+    composeRule.onNodeWithText("Kotlin").assertIsDisplayed()
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 3.</strong> Опишите шаги создания подписанного AAB в Android Studio.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <ol>
+                    <li><code>Build → Generate Signed Bundle / APK → Android App Bundle</code>.</li>
+                    <li>Создать или выбрать keystore, ввести пароли и alias.</li>
+                    <li>Выбрать <code>release</code>, нажать <code>Finish</code>.</li>
+                    <li>Готовый AAB появится в <code>app/release/</code>.</li>
+                    <li>Загрузить AAB в Play Console.</li>
+                </ol>
+            </details>
+        </div>
+
+        <p><a href="section3.html" class="btn">← Назад</a> <a href="tests.html" class="btn">Перейти к тестам →</a></p>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раздел 1. Основы языка Kotlin и среда разработки</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>ЭУМК Kotlin</h2>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="rup.html">Рабочая программа</a>
+            <a href="section1.html" class="active">Раздел 1. Основы Kotlin</a>
+            <a href="section2.html">Раздел 2. Jetpack Compose</a>
+            <a href="section3.html">Раздел 3. Room, Retrofit</a>
+            <a href="section4.html">Раздел 4. Тестирование</a>
+            <a href="tests.html">Тестовые задания</a>
+            <a href="practice.html">Практические задания</a>
+            <a href="literature.html">Список источников</a>
+            <a href="about.html">Об авторе</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Раздел 1. Основы языка Kotlin и среда разработки</h1>
+
+        <h2>1.1. История и место Kotlin в экосистеме мобильной разработки</h2>
+        <p>Kotlin — статически типизированный язык программирования, разработанный компанией JetBrains и впервые представленный в 2011 году [1]. В 2017 году Google объявила Kotlin официальным языком разработки для Android, а в 2019 году — приоритетным (Kotlin-first). Kotlin компилируется в байт-код JVM, но также поддерживает компиляцию в JavaScript (Kotlin/JS) и в нативный код (Kotlin/Native), что делает его мультиплатформенным языком [2].</p>
+        <p>Ключевые причины популярности Kotlin в мобильной разработке:</p>
+        <ul>
+            <li><strong>Полная совместимость с Java:</strong> Kotlin-код может вызывать Java-код и наоборот, что позволяет постепенно мигрировать существующие проекты;</li>
+            <li><strong>Лаконичность:</strong> объём кода сокращается на 30–40% по сравнению с Java за счёт отсутствия обязательных геттеров/сеттеров, вывода типов, свойств вместо полей;</li>
+            <li><strong>Null-безопасность:</strong> система типов на уровне компилятора предотвращает большинство ошибок <code>NullPointerException</code>;</li>
+            <li><strong>Функциональные возможности:</strong> лямбда-выражения, функции высшего порядка, функции-расширения, корутины;</li>
+            <li><strong>Официальная поддержка инструментов:</strong> Android Studio, Jetpack-библиотеки, Jetpack Compose ориентированы в первую очередь на Kotlin [3].</li>
+        </ul>
+
+        <h2>1.2. Переменные, типы данных и вывод типов</h2>
+        <p>В Kotlin переменные объявляются двумя способами [4]:</p>
+        <ul>
+            <li><code>val</code> (value) — неизменяемая ссылка (аналог <code>final</code> в Java), после инициализации значение нельзя переприсвоить;</li>
+            <li><code>var</code> (variable) — изменяемая ссылка.</li>
+        </ul>
+        <pre><code>val name: String = "Kotlin"   // неизменяемая
+var counter: Int = 0          // изменяемая
+counter = 10                  // допустимо
+// name = "Java"              // ошибка компиляции</code></pre>
+        <p>Kotlin — язык со статической типизацией, но компилятор умеет выводить тип из контекста:</p>
+        <pre><code>val pi = 3.14          // тип Double выведен автоматически
+val greeting = "Hi"    // тип String</code></pre>
+        <p>Базовые типы: <code>Byte</code>, <code>Short</code>, <code>Int</code>, <code>Long</code>, <code>Float</code>, <code>Double</code>, <code>Boolean</code>, <code>Char</code>, <code>String</code>. Все они являются объектами (не примитивами), но компилятор оптимизирует их до примитивов JVM там, где это возможно.</p>
+        <p>Строковые шаблоны позволяют встраивать выражения в строки:</p>
+        <pre><code>val age = 20
+println("Возраст: $age, через год: ${age + 1}")</code></pre>
+
+        <h2>1.3. Null-безопасность</h2>
+        <p>Одна из главных особенностей Kotlin — разделение типов на <strong>nullable</strong> (<code>String?</code>) и <strong>non-nullable</strong> (<code>String</code>). Переменная non-nullable типа не может содержать <code>null</code>, и компилятор это гарантирует.</p>
+        <pre><code>var a: String = "text"
+// a = null            // ошибка компиляции
+var b: String? = "text"
+b = null               // допустимо</code></pre>
+        <p>Для работы с nullable-типами предусмотрены операторы:</p>
+        <table>
+            <tr><th>Оператор</th><th>Назначение</th><th>Пример</th></tr>
+            <tr><td><code>?.</code></td><td>Безопасный вызов: возвращает <code>null</code>, если объект <code>null</code></td><td><code>b?.length</code></td></tr>
+            <tr><td><code>?:</code></td><td>Эливис-оператор: значение по умолчанию</td><td><code>b?.length ?: 0</code></td></tr>
+            <tr><td><code>!!</code></td><td>Принудительное разыменование (бросает <code>NullPointerException</code>)</td><td><code>b!!.length</code></td></tr>
+            <tr><td><code>as?</code></td><td>Безопасное приведение типа</td><td><code>obj as? String</code></td></tr>
+        </table>
+        <pre><code>val length: Int = b?.length ?: 0   // безопасно
+val len2 = b!!.length              // опасно, может упасть</code></pre>
+        <p>Оператор <code>!!</code> следует применять только тогда, когда программист абсолютно уверен в ненулевости значения; в противном случае предпочтительны <code>?.</code> и <code>?:</code>.</p>
+
+        <h2>1.4. Управляющие конструкции</h2>
+        <p><strong>Условия:</strong> <code>if</code> в Kotlin — это выражение, возвращающее значение: <code>val max = if (a &gt; b) a else b</code>.</p>
+        <p>Конструкция <code>when</code> заменяет <code>switch</code> и работает с любыми типами, диапазонами и условиями:</p>
+        <pre><code>fun describe(x: Any): String = when (x) {
+    1 -&gt; "единица"
+    in 2..10 -&gt; "от 2 до 10"
+    is String -&gt; "строка длиной ${x.length}"
+    else -&gt; "неизвестно"
+}</code></pre>
+        <p><strong>Циклы:</strong> <code>for</code> работает с диапазонами и коллекциями; <code>while</code> и <code>do-while</code> — как в Java:</p>
+        <pre><code>for (i in 1..5) println(i)          // 1,2,3,4,5
+for (i in 5 downTo 1 step 2) println(i)  // 5,3,1</code></pre>
+
+        <h2>1.5. Функции</h2>
+        <p><strong>Объявление функций.</strong> Функции в Kotlin объявляются ключевым словом <code>fun</code>. Минимальный синтаксис: <code>fun имя(параметры): ВозвращаемыйТип { тело }</code>. Если функция состоит из одного выражения, используется сокращённая форма с <code>=</code> (expression body), при которой тип возвращаемого значения выводится компилятором. Kotlin поддерживает <strong>параметры по умолчанию</strong> (значение задаётся прямо в сигнатуре и может быть опущено при вызове) и <strong>именованные аргументы</strong> (при вызове можно указать <code>имя = значение</code>, что повышает читаемость и позволяет передавать аргументы в произвольном порядке) [5]:</p>
+        <pre><code>fun greet(name: String = "мир"): String = "Привет, $name!"
+
+greet()                    // Привет, мир!
+greet(name = "Kotlin")     // Привет, Kotlin!</code></pre>
+        <p><strong>Функции-расширения.</strong> Это функции, объявленные вне класса, но вызываемые так, как будто они являются его методами. В сигнатуре перед именем функции указывается тип-получатель: <code>fun String.shout()</code>. Внутри такой функции доступен объект-получатель <code>this</code>, ссылающийся на экземпляр, для которого вызвано расширение. Расширения позволяют добавлять новую функциональность к существующим классам (в том числе к классам из сторонних библиотек и к стандартным типам) без наследования и без изменения исходного кода. Важно понимать: расширения разрешаются <strong>статически</strong> — компилятор выбирает нужную функцию по объявленному типу переменной, а не по фактическому типу объекта во время выполнения:</p>
+        <pre><code>fun String.shout(): String = this.uppercase() + "!"
+println("kotlin".shout())   // KOTLIN!</code></pre>
+        <p><strong>Инфиксные функции.</strong> Функция, помеченная словом <code>infix</code>, может вызываться в форме <code>a имя b</code> без точки и скобок. Такая запись используется для операций, читаемых как естественный язык (например, <code>1 to 2</code>, <code>user name "Иван"</code>). Требования: функция должна быть членом класса или расширением, иметь ровно один параметр, и параметр не должен быть <code>vararg</code> или иметь значение по умолчанию.</p>
+        <p><strong>Лямбда-выражения.</strong> Лямбда — это безымянная функция, которую можно передавать как значение, хранить в переменной и возвращать из других функций. Синтаксис: <code>{ параметры -&gt; тело }</code>. Если параметр один, его можно не объявлять и обращаться к нему через неявное имя <code>it</code>. Лямбды — основа функционального стиля: они позволяют передавать поведение в функцию (например, условие фильтрации или правило преобразования) вместо написания отдельных классов и методов. Лямбда замыкает переменные из окружающей области видимости, то есть захватывает их значения:</p>
+        <pre><code>val square: (Int) -&gt; Int = { x -&gt; x * x }
+val isEven: (Int) -&gt; Boolean = { it % 2 == 0 }</code></pre>
+        <p><strong>Функции высшего порядка.</strong> Это функции, которые принимают другие функции в качестве параметров и/или возвращают функцию как результат. Они позволяют абстрагировать повторяющиеся алгоритмы (обход, фильтрация, преобразование, агрегация) и передавать конкретное поведение через лямбду. В примере ниже <code>operate</code> принимает два числа и функцию <code>op</code>, задающую операцию:</p>
+        <pre><code>fun operate(a: Int, b: Int, op: (Int, Int) -&gt; Int): Int = op(a, b)
+val sum = operate(2, 3) { x, y -&gt; x + y }   // 5
+val mul = operate(2, 3) { x, y -&gt; x * y }   // 6</code></pre>
+
+        <h2>1.6. Классы и объекты</h2>
+        <p>Kotlin поддерживает классы, data-классы, sealed-классы, объекты-синглтоны и companion-объекты.</p>
+        <p><strong>Обычные классы.</strong> Класс объявляется словом <code>class</code>; его свойства можно задавать прямо в первичном конструкторе через <code>val</code> (только чтение) или <code>var</code> (чтение и запись). В теле класса можно объявлять дополнительные свойства, методы, инициализаторы (<code>init</code>) и вторичные конструкторы. Обычный класс удобен для описания сущностей с поведением (например, <code>Person</code> с методами и изменяемыми полями):</p>
+        <pre><code>class Person(val name: String, var age: Int) {
+    fun birthday() { age++ }
+}</code></pre>
+        <p><strong>Data-классы.</strong> Data-класс (<code>data class</code>) — это класс, главное назначение которого — хранить набор данных. Компилятор автоматически генерирует для него методы <code>equals</code>/<code>hashCode</code> (сравнение по содержимому, а не по ссылке), <code>toString</code> (читаемое представление), <code>copy</code> (создание копии с изменением отдельных полей) и <code>componentN</code> (деструктуризация). Data-классы удобны для моделей данных, DTO, элементов UI-состояния и ключей в коллекциях. Требования: первичный конструктор должен содержать хотя бы один параметр, помеченный <code>val</code>/<code>var</code>:</p>
+        <pre><code>data class Point(val x: Int, val y: Int)
+
+val p = Point(1, 2)
+val q = p.copy(y = 5)          // Point(x=1, y=5)
+val (x, y) = p                 // деструктуризация
+println(p == Point(1, 2))      // true — сравнение по содержимому</code></pre>
+        <p><strong>Sealed-классы.</strong> Sealed-класс (<code>sealed class</code>) описывает <strong>закрытую иерархию</strong>: все его наследники должны быть объявлены в том же файле (а с Kotlin 1.5 — в том же пакете/модуле). Это даёт компилятору полный список возможных подтипов, поэтому в <code>when</code> по sealed-классу можно не писать ветку <code>else</code> — компилятор проверит исчерпывающность обработки. Sealed-классы идеально подходят для моделирования состояний (загрузка / успех / ошибка), результатов операций и событий:</p>
+        <pre><code>sealed class Result
+class Success(val data: String) : Result()
+class Error(val message: String) : Result()
+
+fun handle(r: Result) = when (r) {
+    is Success -&gt; println("OK: ${r.data}")
+    is Error -&gt; println("Ошибка: ${r.message}")
+}   // ветка else не нужна — все случаи покрыты</code></pre>
+        <p><strong>Объекты-синглтоны и companion-объекты.</strong> Конструкция <code>object</code> объявляет объект в единственном экземпляре (синглтон) — удобно для утилит, репозиториев без состояния, фабрик. <code>companion object</code> — это объект, связанный с классом: его члены доступны через имя класса (аналог статических членов в Java). Companion-объекты часто используются для фабричных методов и констант:</p>
+        <pre><code>object AppConfig { const val BASE_URL = "https://api.example.com/" }
+
+class User private constructor(val id: Int) {
+    companion object {
+        fun create(id: Int) = User(id)
+    }
+}
+val u = User.create(1)   // доступ через имя класса</code></pre>
+        <p><strong>Свойства с кастомными геттерами и сеттерами.</strong> Свойство можно объявить в конструкторе или в теле класса. Для него разрешено определять собственный геттер (<code>get()</code>) и, если свойство изменяемое, сеттер (<code>set(value)</code>). Вычисляемые свойства (без поля-хранилища) удобны для производных величин, например площади:</p>
+        <pre><code>class Rectangle(val width: Int, val height: Int) {
+    val area: Int
+        get() = width * height
+}</code></pre>
+
+        <h2>1.7. Коллекции и функциональная обработка</h2>
+        <p><strong>Immutable и mutable коллекции.</strong> Kotlin на уровне типов разделяет коллекции только для чтения (<code>List</code>, <code>Set</code>, <code>Map</code>) и изменяемые (<code>MutableList</code>, <code>MutableSet</code>, <code>MutableMap</code>). Интерфейс <code>List</code> не содержит методов <code>add</code>/<code>remove</code>, поэтому функция, принимающая <code>List</code>, не может изменить переданную коллекцию — это повышает безопасность и предсказуемость кода. Изменяемые версии добавляют методы модификации. Фабрики <code>listOf()</code>, <code>setOf()</code>, <code>mapOf()</code> создают коллекции только для чтения, а <code>mutableListOf()</code>, <code>mutableSetOf()</code>, <code>mutableMapOf()</code> — изменяемые. При необходимости неизменяемую коллекцию можно преобразовать в изменяемую через <code>toMutableList()</code>.</p>
+        <p><strong>Назначение разных типов коллекций:</strong></p>
+        <ul>
+            <li><code>List</code> — упорядоченная последовательность с доступом по индексу и возможными дубликатами; подходит для списков элементов UI, результатов запросов;</li>
+            <li><code>Set</code> — неупорядоченное множество уникальных элементов; используется для проверки принадлежности, устранения дубликатов;</li>
+            <li><code>Map</code> — набор пар «ключ–значение» с уникальными ключами; применяется для словарей, индексов, кэшей (<code>associateBy</code>).</li>
+        </ul>
+        <p><strong>Функции высшего порядка для обработки коллекций.</strong> Kotlin предоставляет богатый набор декларативных операций, которые принимают лямбды. Это позволяет описывать <strong>что</strong> нужно получить, а не <strong>как</strong> это делать циклом. Основные группы:</p>
+        <ul>
+            <li><strong>преобразование:</strong> <code>map</code> (применяет функцию к каждому элементу), <code>flatMap</code> (преобразует каждый элемент в коллекцию и «разворачивает» результат в один список), <code>zip</code> (объединяет две коллекции в список пар);</li>
+            <li><strong>фильтрация:</strong> <code>filter</code> (оставляет элементы, удовлетворяющие предикату), <code>filterNot</code>, <code>find</code> (первый подходящий элемент или <code>null</code>), <code>distinct</code> (убирает дубликаты);</li>
+            <li><strong>агрегация:</strong> <code>reduce</code> (сворачивает коллекцию, начиная с первого элемента), <code>fold</code> (сворачивает с заданным начальным значением), <code>sum</code>, <code>average</code>, <code>count</code>, <code>maxOrNull</code>, <code>minOrNull</code>;</li>
+            <li><strong>проверки:</strong> <code>any</code> (есть ли хотя бы один подходящий), <code>all</code> (все ли подходят), <code>none</code> (ни один не подходит);</li>
+            <li><strong>группировка и сортировка:</strong> <code>groupBy</code> (строит <code>Map</code> из групп по ключу), <code>sortedBy</code>/<code>sortedByDescending</code> (сортировка по вычисляемому ключу), <code>associateBy</code> (строит <code>Map</code> по ключу из элементов).</li>
+        </ul>
+        <pre><code>val nums = listOf(1, 2, 3, 4, 5, 6)
+
+val squaresOfEvens = nums.filter { it % 2 == 0 }.map { it * it }  // [4, 16, 36]
+val total = nums.reduce { acc, x -&gt; acc + x }                     // 21
+val totalFrom100 = nums.fold(100) { acc, x -&gt; acc + x }           // 121
+val hasNegative = nums.any { it &lt; 0 }                             // false
+val allPositive = nums.all { it &gt; 0 }                             // true
+val byParity = nums.groupBy { it % 2 == 0 }                       // {false=[1,3,5], true=[2,4,6]}
+val pairs = listOf("a", "b").zip(listOf(1, 2))                    // [(a,1), (b,2)]</code></pre>
+        <p><strong>Цепочки операций.</strong> Функции высшего порядка можно объединять в цепочки; при этом промежуточные коллекции создаются лениво только при необходимости. Для больших коллекций применяются последовательности (<code>asSequence()</code>), которые обрабатывают элементы по одному без создания промежуточных списков:</p>
+        <pre><code>val result = (1..1_000_000).asSequence()
+    .filter { it % 2 == 0 }
+    .map { it * it }
+    .take(5)
+    .toList()   // [4, 16, 36, 64, 100]</code></pre>
+
+        <h2>1.8. Среда разработки Android Studio</h2>
+        <p>Android Studio — официальная IDE для Android-разработки, основанная на IntelliJ IDEA. Основные компоненты:</p>
+        <ul>
+            <li><strong>Gradle</strong> — система сборки; конфигурация проекта описывается в <code>build.gradle.kts</code>;</li>
+            <li><strong>SDK Manager</strong> — управление версиями Android SDK и инструментами;</li>
+            <li><strong>AVD Manager</strong> — создание виртуальных устройств (эмуляторов);</li>
+            <li><strong>Logcat</strong> — просмотр системных логов;</li>
+            <li><strong>Layout Inspector</strong> — анализ UI в реальном времени.</li>
+        </ul>
+        <p>Минимальный проект содержит: <code>AndroidManifest.xml</code> (описание приложения), <code>MainActivity.kt</code> (точка входа), <code>res/</code> (ресурсы), <code>build.gradle.kts</code> (зависимости).</p>
+
+                <h2>Контрольные вопросы</h2>
+        <div class="question">
+            <p><strong>1.</strong> Чем <code>val</code> отличается от <code>var</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>val</code> нельзя изменить после присваивания, <code>var</code> — можно.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>2.</strong> Что делает оператор <code>?.</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Безопасно вызывает метод: если объект <code>null</code>, вернёт <code>null</code>, а не ошибку.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>3.</strong> Что делает оператор <code>?:</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Возвращает значение по умолчанию, если слева <code>null</code>.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>4.</strong> Что такое функция-расширение?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Функция, которую можно вызывать как метод класса, не меняя сам класс.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>5.</strong> Чем <code>List</code> отличается от <code>MutableList</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>List</code> нельзя изменить (нет <code>add</code>/<code>remove</code>), <code>MutableList</code> — можно.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>6.</strong> Что такое data-класс?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Класс для хранения данных; сам создаёт <code>equals</code>, <code>hashCode</code>, <code>toString</code>, <code>copy</code>.</div>
+            </details>
+        </div>
+
+        <h2>Упражнения для самостоятельной работы</h2>
+        <div class="exercise">
+            <p><strong>Упражнение 1.</strong> Напишите функцию, которая из списка чисел оставляет только чётные и возводит их в квадрат.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>fun evenSquares(numbers: List&lt;Int&gt;): List&lt;Int&gt; =
+    numbers.filter { it % 2 == 0 }.map { it * it }
+
+fun main() {
+    println(evenSquares(listOf(1, 2, 3, 4, 5)))  // [4, 16]
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 2.</strong> Создайте класс <code>User</code> с полями <code>name</code> и <code>age</code> (возраст может быть <code>null</code>). Выведите имя и возраст, обработав <code>null</code>.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>class User(val name: String, val age: Int?)
+
+fun printUser(u: User) {
+    val ageText = u.age?.toString() ?: "не указан"
+    println("${u.name}: $ageText")
+}
+
+fun main() {
+    printUser(User("Иван", 25))     // Иван: 25
+    printUser(User("Мария", null))  // Мария: не указан
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 3.</strong> Напишите функцию-расширение для <code>String</code>, которая переворачивает строку.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>fun String.reverseWords(): String = this.split(" ").reversed().joinToString(" ")
+
+fun main() {
+    println("Kotlin is great".reverseWords())  // great is Kotlin
+}</code></pre>
+            </details>
+        </div>
+
+        <p><a href="section2.html" class="btn">Перейти к разделу 2 →</a></p>
+    </main>
+
+</body>
+</html>

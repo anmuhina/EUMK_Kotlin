@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовые задания</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        /* Дополнительные стили для интерактивного теста */
+        .test-intro {
+            background: #eaf2f8;
+            border-left: 4px solid #3498db;
+            padding: 15px 20px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 25px;
+        }
+        .test-question {
+            background: #fff;
+            border: 1px solid #d5dbdb;
+            border-radius: 6px;
+            padding: 18px 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .test-question.correct {
+            border-left: 5px solid #27ae60;
+            background: #f0faf3;
+        }
+        .test-question.incorrect {
+            border-left: 5px solid #e74c3c;
+            background: #fdf2f1;
+        }
+        .test-question h3 {
+            margin-top: 0;
+            font-size: 1.05rem;
+            color: #2c3e50;
+        }
+        .test-options label {
+            display: block;
+            padding: 8px 12px;
+            margin: 6px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .test-options label:hover {
+            background: #eaf2f8;
+        }
+        .test-options input[type="checkbox"],
+        .test-options input[type="radio"] {
+            margin-right: 10px;
+        }
+        .test-feedback {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            display: none;
+        }
+        .test-feedback.show {
+            display: block;
+        }
+        .test-feedback.ok {
+            background: #e8f5e9;
+            color: #1e7e34;
+            border-left: 3px solid #27ae60;
+        }
+        .test-feedback.fail {
+            background: #fdecea;
+            color: #b71c1c;
+            border-left: 3px solid #e74c3c;
+        }
+        .test-controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .test-controls button {
+            background: #3498db;
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        .test-controls button:hover {
+            background: #2980b9;
+        }
+        .test-controls button.reset {
+            background: #7f8c8d;
+        }
+        .test-controls button.reset:hover {
+            background: #5d6d6e;
+        }
+        .test-result {
+            display: none;
+            text-align: center;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+        .test-result.show {
+            display: block;
+        }
+        .test-result .score {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .test-result .grade {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .test-result.excellent { background: #e8f5e9; color: #1e7e34; border: 2px solid #27ae60; }
+        .test-result.good      { background: #e3f2fd; color: #1565c0; border: 2px solid #2196f3; }
+        .test-result.satisfactory { background: #fff8e1; color: #b26a00; border: 2px solid #ffb300; }
+        .test-result.fail      { background: #fdecea; color: #b71c1c; border: 2px solid #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>ЭУМК Kotlin</h2>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="rup.html">Рабочая программа</a>
+            <a href="section1.html">Раздел 1. Основы Kotlin</a>
+            <a href="section2.html">Раздел 2. Jetpack Compose</a>
+            <a href="section3.html">Раздел 3. Room, Retrofit</a>
+            <a href="section4.html">Раздел 4. Тестирование</a>
+            <a href="tests.html" class="active">Тестовые задания</a>
+            <a href="practice.html">Практические задания</a>
+            <a href="literature.html">Список источников</a>
+            <a href="about.html">Об авторе</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Тестовые задания по курсу</h1>
+
+        <div class="test-intro">
+            <p><strong>Инструкция.</strong> В тесте 20 заданий. В каждом задании выберите один или несколько вариантов ответа (в заданиях с несколькими правильными ответами отметьте все верные). Нажмите «Проверить ответы» — система подсчитает баллы и выставит оценку.</p>
+            <p><strong>Шкала оценивания:</strong> 18–20 — «отлично»; 14–17 — «хорошо»; 10–13 — «удовлетворительно»; менее 10 — «неудовлетворительно». За каждое полностью верное задание начисляется 1 балл.</p>
+        </div>
+
+        <form id="testForm">
+            <div id="questionsContainer"></div>
+
+            <div class="test-controls">
+                <button type="button" id="checkBtn">Проверить ответы</button>
+                <button type="button" id="resetBtn" class="reset">Сбросить</button>
+            </div>
+        </form>
+
+        <div id="resultBox" class="test-result"></div>
+
+        <p><a href="practice.html" class="btn">Перейти к практическим заданиям →</a></p>
+    </main>
+
+    <script>
+        // ===== Данные теста: 20 заданий =====
+        // correct: массив индексов правильных вариантов (0-based)
+        // multi: true, если правильных ответов несколько (checkbox), иначе radio
+        const questions = [
+            {
+                text: "Какое ключевое слово объявляет неизменяемую переменную в Kotlin?",
+                options: ["var", "val", "const", "final"],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Что вернёт выражение <code>null?.length ?: 0</code>?",
+                options: ["null", "0", "Ошибку NullPointerException", "-1"],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Выберите все верные утверждения о функциях-расширениях:",
+                options: [
+                    "Позволяют добавить метод классу без наследования",
+                    "Внутри доступен объект-получатель this",
+                    "Изменяют исходный код класса",
+                    "Разрешаются статически, по объявленному типу"
+                ],
+                correct: [0, 1, 3],
+                multi: true
+            },
+            {
+                text: "Какие из перечисленных коллекций являются неизменяемыми (только для чтения)?",
+                options: ["List", "MutableList", "Set", "MutableMap"],
+                correct: [0, 2],
+                multi: true
+            },
+            {
+                text: "Что автоматически генерирует data-класс?",
+                options: [
+                    "Только toString",
+                    "equals, hashCode, toString, copy, componentN",
+                    "Только equals и hashCode",
+                    "Ничего, всё пишется вручную"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Для чего используется sealed-класс?",
+                options: [
+                    "Для хранения констант",
+                    "Для закрытой иерархии наследников и исчерпывающего when",
+                    "Для создания синглтона",
+                    "Для сериализации JSON"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Какие утверждения об object в Kotlin верны?",
+                options: [
+                    "Создаёт синглтон",
+                    "Может содержать companion object",
+                    "Требует явного вызова конструктора при создании",
+                    "Может реализовывать интерфейсы"
+                ],
+                correct: [0, 1, 3],
+                multi: true
+            },
+            {
+                text: "Что произойдёт при выполнении <code>val x: String? = null; println(x!!.length)</code>?",
+                options: [
+                    "Выведется 0",
+                    "Выведется null",
+                    "Будет выброшено NullPointerException",
+                    "Ошибка компиляции"
+                ],
+                correct: [2],
+                multi: false
+            },
+            {
+                text: "Какие операторы безопасной работы с nullable-типами существуют в Kotlin?",
+                options: ["?.", "?:", "!! (безопасный оператор)", "as?"],
+                correct: [0, 1, 3],
+                multi: true
+            },
+            {
+                text: "Что такое рекомпозиция в Jetpack Compose?",
+                options: [
+                    "Перезапуск приложения",
+                    "Повторный вызов composable-функции при изменении состояния",
+                    "Пересоздание Activity",
+                    "Компиляция проекта"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Какой компонент создаёт только видимые элементы списка?",
+                options: ["Column", "Row", "LazyColumn", "Box"],
+                correct: [2],
+                multi: false
+            },
+            {
+                text: "Выберите все верные утверждения о remember:",
+                options: [
+                    "Сохраняет значение между рекомпозициями",
+                    "Сбрасывает состояние при каждой рекомпозиции",
+                    "Часто используется вместе с mutableStateOf",
+                    "rememberSaveable переживает смену конфигурации"
+                ],
+                correct: [0, 2, 3],
+                multi: true
+            },
+            {
+                text: "Что такое state hoisting?",
+                options: [
+                    "Удаление состояния",
+                    "Подъём состояния в родительский composable",
+                    "Сохранение состояния в БД",
+                    "Передача состояния в сеть"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Какие утверждения о suspend-функциях верны?",
+                options: [
+                    "Может приостанавливаться, не блокируя поток",
+                    "Вызывается только из корутины или другой suspend-функции",
+                    "Блокирует главный поток на время выполнения",
+                    "Может использовать withContext для смены диспетчера"
+                ],
+                correct: [0, 1, 3],
+                multi: true
+            },
+            {
+                text: "Какая аннотация Room помечает таблицу?",
+                options: ["@Dao", "@Entity", "@Database", "@Table"],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Что делает withContext(Dispatchers.IO)?",
+                options: [
+                    "Переключает выполнение на главный поток",
+                    "Переключает выполнение на пул для операций ввода-вывода",
+                    "Создаёт новый поток ОС",
+                    "Останавливает корутину"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Выберите все верные утверждения о StateFlow:",
+                options: [
+                    "Это горячий поток",
+                    "Всегда имеет текущее значение",
+                    "Начинает работать только при подписке",
+                    "Собирается в Compose через collectAsStateWithLifecycle()"
+                ],
+                correct: [0, 1, 3],
+                multi: true
+            },
+            {
+                text: "Для чего используется Retrofit?",
+                options: [
+                    "Для работы с локальной БД",
+                    "Для HTTP-запросов к REST API",
+                    "Для вёрстки UI",
+                    "Для unit-тестов"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Чем unit-тест отличается от UI-теста?",
+                options: [
+                    "Unit-тест запускается на устройстве, UI-тест — на JVM",
+                    "Unit-тест проверяет код на JVM, UI-тест — интерфейс на устройстве/эмуляторе",
+                    "Они ничем не отличаются",
+                    "UI-тест быстрее unit-теста"
+                ],
+                correct: [1],
+                multi: false
+            },
+            {
+                text: "Выберите все верные утверждения о публикации приложения:",
+                options: [
+                    "Для Google Play обязателен формат AAB",
+                    "Приложение должно быть подписано ключом",
+                    "versionCode должен увеличиваться с каждой публикацией",
+                    "Подпись можно не делать, если приложение бесплатное"
+                ],
+                correct: [0, 1, 2],
+                multi: true
+            }
+        ];
+
+        // ===== Отрисовка вопросов =====
+        const container = document.getElementById('questionsContainer');
+
+        questions.forEach((q, qi) => {
+            const block = document.createElement('div');
+            block.className = 'test-question';
+            block.id = 'q' + qi;
+
+            const title = document.createElement('h3');
+            title.innerHTML = (qi + 1) + '. ' + q.text;
+            block.appendChild(title);
+
+            const opts = document.createElement('div');
+            opts.className = 'test-options';
+
+            q.options.forEach((opt, oi) => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = q.multi ? 'checkbox' : 'radio';
+                input.name = 'q' + qi;
+                input.value = oi;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(opt));
+                opts.appendChild(label);
+            });
+
+            block.appendChild(opts);
+
+            const fb = document.createElement('div');
+            fb.className = 'test-feedback';
+            fb.id = 'fb' + qi;
+            block.appendChild(fb);
+
+            container.appendChild(block);
+        });
+
+        // ===== Проверка ответов =====
+        document.getElementById('checkBtn').addEventListener('click', () => {
+            let score = 0;
+
+            questions.forEach((q, qi) => {
+                const block = document.getElementById('q' + qi);
+                const fb = document.getElementById('fb' + qi);
+                const inputs = block.querySelectorAll('input');
+
+                // Собираем выбранные индексы
+                const selected = [];
+                inputs.forEach(inp => {
+                    if (inp.checked) selected.push(parseInt(inp.value, 10));
+                });
+
+                // Сравниваем с правильными (порядок не важен)
+                const correctSorted = [...q.correct].sort((a, b) => a - b);
+                const selectedSorted = [...selected].sort((a, b) => a - b);
+                const isCorrect =
+                    correctSorted.length === selectedSorted.length &&
+                    correctSorted.every((v, i) => v === selectedSorted[i]);
+
+                block.classList.remove('correct', 'incorrect');
+                fb.classList.remove('show', 'ok', 'fail');
+
+                if (isCorrect) {
+                    score++;
+                    block.classList.add('correct');
+                    fb.classList.add('show', 'ok');
+                    fb.innerHTML = '✔ Верно.';
+                } else {
+                    block.classList.add('incorrect');
+                    fb.classList.add('show', 'fail');
+                    const correctText = q.correct
+                        .map(i => q.options[i])
+                        .join('; ');
+                    fb.innerHTML = '✘ Неверно. Правильный ответ: <strong>' + correctText + '</strong>';
+                }
+            });
+
+            // Итоговый результат и оценка
+            const resultBox = document.getElementById('resultBox');
+            resultBox.className = 'test-result show';
+
+            let grade, cls;
+            if (score >= 18) { grade = 'отлично'; cls = 'excellent'; }
+            else if (score >= 14) { grade = 'хорошо'; cls = 'good'; }
+            else if (score >= 10) { grade = 'удовлетворительно'; cls = 'satisfactory'; }
+            else { grade = 'неудовлетворительно'; cls = 'fail'; }
+
+            resultBox.classList.add(cls);
+            resultBox.innerHTML =
+                '<div>Правильных ответов:</div>' +
+                '<div class="score">' + score + ' из ' + questions.length + '</div>' +
+                '<div class="grade">Оценка: ' + grade + '</div>';
+
+            // Прокрутка к результату
+            resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        // ===== Сброс =====
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('testForm').reset();
+
+            questions.forEach((q, qi) => {
+                const block = document.getElementById('q' + qi);
+                const fb = document.getElementById('fb' + qi);
+                block.classList.remove('correct', 'incorrect');
+                fb.classList.remove('show', 'ok', 'fail');
+                fb.innerHTML = '';
+            });
+
+            const resultBox = document.getElementById('resultBox');
+            resultBox.className = 'test-result';
+            resultBox.innerHTML = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+
+</body>
+</html>

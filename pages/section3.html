@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раздел 3. Работа с данными и сетью (Room, Retrofit, корутины)</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>ЭУМК Kotlin</h2>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="rup.html">Рабочая программа</a>
+            <a href="section1.html">Раздел 1. Основы Kotlin</a>
+            <a href="section2.html">Раздел 2. Jetpack Compose</a>
+            <a href="section3.html" class="active">Раздел 3. Room, Retrofit</a>
+            <a href="section4.html">Раздел 4. Тестирование</a>
+            <a href="tests.html">Тестовые задания</a>
+            <a href="practice.html">Практические задания</a>
+            <a href="literature.html">Список источников</a>
+            <a href="about.html">Об авторе</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Раздел 3. Работа с данными и сетью (Room, Retrofit, корутины)</h1>
+
+        <h2>3.1. Архитектура Android-приложения (MVVM + Clean Architecture)</h2>
+        <p>Современное Android-приложение строится по паттерну <strong>MVVM</strong> (Model–View–ViewModel) с элементами Clean Architecture. Слои:</p>
+        <ul>
+            <li><strong>UI (View)</strong> — Compose-экраны, наблюдают за состоянием ViewModel;</li>
+            <li><strong>ViewModel</strong> — хранит UI-состояние, вызывает репозиторий, переживает смену конфигурации;</li>
+            <li><strong>Repository</strong> — единый источник данных, комбинирует сеть и кэш (БД);</li>
+            <li><strong>Data sources</strong> — Retrofit (сеть) и Room (локальная БД).</li>
+        </ul>
+        <p>Такое разделение обеспечивает тестируемость, переиспользуемость и независимость бизнес-логики от UI. ViewModel во фреймворке Android предоставляется библиотекой <code>androidx.lifecycle:lifecycle-viewmodel-compose</code>.</p>
+        <pre><code>class UserViewModel(private val repo: UserRepository) : ViewModel() {
+    private val _state = MutableStateFlow&lt;UiState&gt;(UiState.Loading)
+    val state: StateFlow&lt;UiState&gt; = _state.asStateFlow()
+
+    fun load(id: String) = viewModelScope.launch {
+        _state.value = UiState.Loading
+        _state.value = runCatching { repo.getUser(id) }
+            .fold({ UiState.Success(it) }, { UiState.Error(it.message ?: "Ошибка") })
+    }
+}</code></pre>
+
+        <h2>3.2. Корутины Kotlin</h2>
+        <p><strong>Корутина</strong> — легковесный поток выполнения, управляемый планировщиком Kotlin. В отличие от потоков ОС, корутины не блокируют поток при приостановке (<code>suspend</code>), а освобождают его для других задач. Это позволяет запускать тысячи корутин без накладных расходов на потоки.</p>
+        <p>Ключевые понятия:</p>
+        <ul>
+            <li><code>suspend</code>-функция — функция, которая может приостанавливать выполнение, не блокируя поток; вызывается только из корутины или другой <code>suspend</code>-функции;</li>
+            <li><code>CoroutineScope</code> — область жизни корутин; при отмене scope отменяются все его корутины;</li>
+            <li><code>Dispatchers</code> — планировщики: <code>Main</code> (UI), <code>IO</code> (сеть/диск), <code>Default</code> (CPU-задачи), <code>Unconfined</code>;</li>
+            <li><code>launch</code> — запуск корутины без результата; <code>async</code> — с результатом (<code>Deferred</code>, ожидается через <code>await</code>);</li>
+            <li><code>withContext(Dispatchers.IO)</code> — переключение контекста внутри <code>suspend</code>-функции.</li>
+        </ul>
+        <pre><code>suspend fun loadUsers(): List&lt;User&gt; = withContext(Dispatchers.IO) {
+    api.getUsers()   // сетевой вызов
+}</code></pre>
+        <p><strong>Структурная конкурентность:</strong> корутины всегда привязаны к scope, и родительская корутина ждёт завершения дочерних. <code>viewModelScope</code> автоматически отменяется при уничтожении ViewModel; <code>lifecycleScope</code> — при уничтожении Activity/Fragment. <code>GlobalScope</code> использовать не рекомендуется.</p>
+        <p><strong>Обработка ошибок:</strong> <code>try/catch</code> внутри корутины, <code>CoroutineExceptionHandler</code> для <code>launch</code>, <code>runCatching</code>/<code>Result</code> для функционального стиля. Отмена корутины — через <code>CancellationException</code> и проверку <code>isActive</code>/<code>ensureActive()</code>.</p>
+
+        <h2>3.3. Потоки данных: Flow, StateFlow, SharedFlow</h2>
+        <p><strong>Flow</strong> — холодный асинхронный поток данных (аналог <code>Sequence</code>, но с поддержкой <code>suspend</code>). Создаётся через <code>flow { emit(...) }</code> или из коллекций (<code>asFlow()</code>). Операторы: <code>map</code>, <code>filter</code>, <code>flatMapLatest</code>, <code>catch</code>, <code>onEach</code>, <code>debounce</code>:</p>
+        <pre><code>fun usersFlow(): Flow&lt;List&lt;User&gt;&gt; = flow {
+    emit(api.getUsers())
+}.catch { emit(emptyList()) }</code></pre>
+        <p><strong>StateFlow</strong> — горячий поток с текущим значением (аналог <code>LiveData</code>); всегда имеет начальное состояние, эмитит последнее значение новым подписчикам. Используется для UI-состояния.</p>
+        <p><strong>SharedFlow</strong> — горячий поток без начального значения; применяется для событий (например, навигация, snackbar).</p>
+        <p>В Compose Flow собирается через <code>collectAsStateWithLifecycle()</code>:</p>
+        <pre><code>val state by viewModel.state.collectAsStateWithLifecycle()</code></pre>
+
+        <h2>3.4. Room: локальная база данных</h2>
+        <p><strong>Room</strong> — ORM-библиотека над SQLite, часть Jetpack. Она проверяет SQL-запросы на этапе компиляции, поддерживает <code>Flow</code> в запросах (автоматическое обновление при изменениях), <code>suspend</code>-методы и транзакции. Room избавляет от ручного написания <code>Cursor</code>-кода и снижает вероятность ошибок. Компоненты:</p>
+        <ul>
+            <li><code>@Entity</code> — таблица; поля класса = столбцы;</li>
+            <li><code>@Dao</code> — интерфейс с методами доступа к данным (аннотации <code>@Insert</code>, <code>@Update</code>, <code>@Delete</code>, <code>@Query</code>);</li>
+            <li><code>@Database</code> — абстрактный класс, связывающий сущности и DAO.</li>
+        </ul>
+        <pre><code>@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val content: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Dao
+interface NoteDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(note: Note): Long
+
+    @Query("SELECT * FROM notes ORDER BY createdAt DESC")
+    fun observeAll(): Flow&lt;List&lt;Note&gt;&gt;
+
+    @Delete
+    suspend fun delete(note: Note)
+}
+
+@Database(entities = [Note::class], version = 1, exportSchema = false)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        @Volatile private var INSTANCE: AppDatabase? = null
+        fun get(context: Context): AppDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(context, AppDatabase::class.java, "app.db")
+                    .fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
+            }
+    }
+}</code></pre>
+        <p>Room поддерживает <code>Flow</code> в запросах (автоматическое обновление при изменениях), <code>suspend</code>-методы, транзакции (<code>@Transaction</code>), отношения (<code>@Relation</code>), миграции. Использование Room исключает ошибки SQL на этапе компиляции благодаря проверке запросов.</p>
+
+        <h2>3.5. Retrofit: сетевые запросы</h2>
+        <p><strong>Retrofit</strong> — типобезопасный HTTP-клиент для Android/JVM, построенный поверх OkHttp. API описывается интерфейсом с аннотациями, а Retrofit генерирует реализацию. Это позволяет вызывать REST-эндпоинты как обычные функции Kotlin.</p>
+        <p>Аннотации: <code>@GET</code>, <code>@POST</code>, <code>@PUT</code>, <code>@DELETE</code>, <code>@PATCH</code> задают HTTP-метод и путь; <code>@Path</code> подставляет значение в URL; <code>@Query</code> добавляет query-параметр; <code>@Body</code> задаёт тело запроса; <code>@Header</code>/<code>@Headers</code> — заголовки; <code>@FormUrlEncoded</code>/<code>@Field</code> — form-data.</p>
+        <pre><code>data class UserDto(
+    val id: Int,
+    val name: String,
+    val email: String,
+    @SerialName("phone") val phoneNumber: String? = null
+)
+
+interface ApiService {
+    @GET("users")
+    suspend fun getUsers(): List&lt;UserDto&gt;
+
+    @GET("users/{id}")
+    suspend fun getUser(@Path("id") id: Int): UserDto
+
+    @POST("posts")
+    suspend fun createPost(@Body post: PostDto): PostDto
+
+    @GET("search")
+    suspend fun search(@Query("q") query: String, @Query("page") page: Int = 1): List&lt;UserDto&gt;
+}</code></pre>
+        <p>Настройка клиента:</p>
+        <pre><code>val retrofit = Retrofit.Builder()
+    .baseUrl("https://jsonplaceholder.typicode.com/")
+    .addConverterFactory(Json { ignoreUnknownKeys = true }
+        .asConverterFactory("application/json".toMediaType()))
+    .client(OkHttpClient.Builder()
+        .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .build())
+    .build()
+
+val api = retrofit.create(ApiService::class.java)</code></pre>
+
+        <h2>3.6. Паттерн Repository и кэширование</h2>
+        <p>Репозиторий скрывает источники данных от ViewModel и реализует стратегию «сеть с кэшем в БД»:</p>
+        <pre><code>class UserRepository(
+    private val api: ApiService,
+    private val dao: UserDao
+) {
+    fun observeUsers(): Flow&lt;List&lt;User&gt;&gt; = dao.observeAll()
+
+    suspend fun refresh(): Result&lt;Unit&gt; = runCatching {
+        val remote = api.getUsers().map { it.toEntity() }
+        dao.replaceAll(remote)
+    }
+}</code></pre>
+        <p>Такой подход обеспечивает работу offline: UI читает из БД (<code>Flow</code> обновляется автоматически), а сеть лишь синхронизирует данные.</p>
+
+        <h2>3.7. Обработка ошибок и состояний загрузки</h2>
+        <p>UI-состояние принято моделировать sealed-классом:</p>
+        <pre><code>sealed interface UiState&lt;out T&gt; {
+    data object Loading : UiState&lt;Nothing&gt;
+    data class Success&lt;T&gt;(val data: T) : UiState&lt;T&gt;
+    data class Error(val message: String) : UiState&lt;Nothing&gt;
+}</code></pre>
+        <p>Это позволяет исчерпывающе обрабатывать состояния через <code>when</code> и не забывать про ветки ошибок и загрузки.</p>
+
+                <h2>Контрольные вопросы</h2>
+        <div class="question">
+            <p><strong>1.</strong> Какая аннотация помечает таблицу в Room?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>@Entity</code>.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>2.</strong> Какая аннотация помечает интерфейс для доступа к данным?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>@Dao</code>.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>3.</strong> Что такое <code>suspend</code>-функция?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Функция, которая может приостанавливаться, не блокируя поток; вызывается из корутины.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>4.</strong> Что такое корутина?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Легковесный поток выполнения, управляемый Kotlin.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>5.</strong> Что делает <code>withContext(Dispatchers.IO)</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Переключает выполнение на пул для операций ввода-вывода (сеть, диск).</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>6.</strong> Для чего нужен Retrofit?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Для выполнения HTTP-запросов к REST API.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>7.</strong> Чем <code>StateFlow</code> отличается от <code>Flow</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>StateFlow</code> — горячий поток с текущим значением, <code>Flow</code> — холодный, начинает работать при подписке.</div>
+            </details>
+        </div>
+
+        <h2>Упражнения для самостоятельной работы</h2>
+        <div class="exercise">
+            <p><strong>Упражнение 1.</strong> Создайте <code>@Entity Note</code> (id, title, content) и <code>@Dao</code> с методами <code>insert</code>, <code>getAll</code>, <code>delete</code>.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val content: String
+)
+
+@Dao
+interface NoteDao {
+    @Insert
+    suspend fun insert(note: Note): Long
+
+    @Query("SELECT * FROM notes ORDER BY id DESC")
+    fun getAll(): Flow&lt;List&lt;Note&gt;&gt;
+
+    @Delete
+    suspend fun delete(note: Note)
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 2.</strong> Настройте Retrofit для получения списка постов с <code>https://jsonplaceholder.typicode.com/posts</code>.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>data class PostDto(
+    val id: Int,
+    val userId: Int,
+    val title: String,
+    val body: String
+)
+
+interface PostsApi {
+    @GET("posts")
+    suspend fun getPosts(): List&lt;PostDto&gt;
+}
+
+val retrofit = Retrofit.Builder()
+    .baseUrl("https://jsonplaceholder.typicode.com/")
+    .addConverterFactory(Json { ignoreUnknownKeys = true }
+        .asConverterFactory("application/json".toMediaType()))
+    .build()
+
+val postsApi = retrofit.create(PostsApi::class.java)</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 3.</strong> Напишите <code>suspend</code>-функцию, которая загружает посты из сети и сохраняет их в Room.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>class PostRepository(
+    private val api: PostsApi,
+    private val dao: PostDao
+) {
+    suspend fun sync(): Result&lt;Unit&gt; = withContext(Dispatchers.IO) {
+        runCatching {
+            val remote = api.getPosts().map { it.toEntity() }
+            dao.replaceAll(remote)
+        }
+    }
+}</code></pre>
+            </details>
+        </div>
+
+        <p><a href="section2.html" class="btn">← Назад</a> <a href="section4.html" class="btn">Перейти к разделу 4 →</a></p>
+    </main>
+
+</body>
+</html>

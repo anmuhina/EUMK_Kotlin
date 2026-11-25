@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практические задания</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>ЭУМК Kotlin</h2>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="rup.html">Рабочая программа</a>
+            <a href="section1.html">Раздел 1. Основы Kotlin</a>
+            <a href="section2.html">Раздел 2. Jetpack Compose</a>
+            <a href="section3.html">Раздел 3. Room, Retrofit</a>
+            <a href="section4.html">Раздел 4. Тестирование</a>
+            <a href="tests.html">Тестовые задания</a>
+            <a href="practice.html" class="active">Практические задания</a>
+            <a href="literature.html">Список источников</a>
+            <a href="about.html">Об авторе</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Комплекс практических заданий</h1>
+
+        <h2>Критерии и шкала оценивания</h2>
+        <p>Каждое задание оценивается по <strong>5-балльной шкале</strong>. Итоговая оценка за комплекс — среднее арифметическое по трём заданиям (с округлением до целого).</p>
+        <table>
+            <tr><th>Баллы</th><th>Критерий</th></tr>
+            <tr><td><strong>5</strong></td><td>Задание выполнено полностью: код компилируется, весь заявленный функционал работает, код читаем и соответствует стандартам Kotlin (именование, форматирование), обработаны граничные случаи, есть пояснения.</td></tr>
+            <tr><td><strong>4</strong></td><td>Задание выполнено, код компилируется и работает, но есть незначительные недочёты: нет обработки отдельных граничных случаев, мелкие отклонения от стандартов оформления.</td></tr>
+            <tr><td><strong>3</strong></td><td>Основной функционал работает, но есть ошибки или неполная реализация (часть требований не выполнена), код компилируется.</td></tr>
+            <tr><td><strong>2</strong></td><td>Задание выполнено частично: код не компилируется или не работает ключевой функционал.</td></tr>
+            <tr><td><strong>1</strong></td><td>Задание не выполнено или выполнено с грубыми ошибками, не относящимися к теме.</td></tr>
+        </table>
+        <p><strong>Дополнительные критерии:</strong> корректность использования конструкций языка и библиотек (Compose, Room, Retrofit, корутины); обработка ошибок и граничных случаев (пустой список, <code>null</code>, сетевая ошибка); читаемость кода и осмысленные имена; наличие краткого пояснения к решению.</p>
+        <p><strong>Шкала итоговой оценки за комплекс:</strong> 4,5–5,0 — «отлично»; 3,5–4,4 — «хорошо»; 2,5–3,4 — «удовлетворительно»; менее 2,5 — «неудовлетворительно».</p>
+
+        <h2>Задание 1 (базовое). Консольная обработка списка чисел на Kotlin</h2>
+        <div class="exercise">
+            <p><strong>Формулировка.</strong> Разработать консольное приложение на Kotlin, которое принимает от пользователя список целых чисел (через запятую или пробел) и выводит: сумму чисел, среднее арифметическое, максимальное значение.</p>
+            <p><strong>Требования:</strong></p>
+            <ul>
+                <li>использовать функции и коллекции (<code>filter</code>, <code>map</code>, <code>reduce</code>/<code>sum</code>, <code>maxOrNull</code>);</li>
+                <li>обработать пустой ввод и некорректные данные (не числа);</li>
+                <li>код должен компилироваться и запускаться.</li>
+            </ul>
+            <p><strong>Проверяемые умения и навыки:</strong> синтаксис Kotlin, работа с коллекциями, функции высшего порядка, обработка ошибок ввода.</p>
+            <details>
+                <summary>Показать пример выполнения</summary>
+                <pre><code>fun parseNumbers(input: String): List&lt;Int&gt; =
+    input.split(",", " ").mapNotNull { it.trim().toIntOrNull() }
+
+fun main() {
+    print("Введите числа через запятую или пробел: ")
+    val input = readlnOrNull().orEmpty()
+    val numbers = parseNumbers(input)
+
+    if (numbers.isEmpty()) {
+        println("Список пуст или содержит некорректные данные")
+        return
+    }
+
+    println("Сумма: ${numbers.sum()}")
+    println("Среднее: ${numbers.average()}")
+    println("Максимум: ${numbers.maxOrNull()}")
+}</code></pre>
+                <p><strong>Пояснение.</strong> <code>mapNotNull</code> отбрасывает некорректные значения, <code>sum</code>/<code>average</code>/<code>maxOrNull</code> дают агрегаты; пустой список обрабатывается отдельно.</p>
+            </details>
+        </div>
+
+        <h2>Задание 2 (среднее). Android-приложение «To-Do List» на Jetpack Compose</h2>
+        <div class="exercise">
+            <p><strong>Формулировка.</strong> Создать Android-приложение с одним экраном, содержащим список задач. Реализовать: добавление задачи через текстовое поле и кнопку; отображение списка через <code>LazyColumn</code>; удаление задачи по долгому нажатию.</p>
+            <p><strong>Требования:</strong></p>
+            <ul>
+                <li>состояние хранить через <code>remember</code> / <code>mutableStateOf</code> (или <code>rememberSaveable</code>);</li>
+                <li>пустые задачи не добавлять;</li>
+                <li>использовать Material 3 компоненты;</li>
+                <li>код должен компилироваться и запускаться на эмуляторе.</li>
+            </ul>
+            <p><strong>Проверяемые умения и навыки:</strong> Jetpack Compose, управление состоянием, <code>LazyColumn</code>, обработка событий, state hoisting.</p>
+            <details>
+                <summary>Показать пример выполнения</summary>
+                <pre><code>@Composable
+fun TodoScreen() {
+    var input by rememberSaveable { mutableStateOf("") }
+    val tasks = remember { mutableStateListOf&lt;String&gt;() }
+
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextField(
+                value = input,
+                onValueChange = { input = it },
+                label = { Text("Новая задача") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = {
+                if (input.isNotBlank()) {
+                    tasks.add(input.trim())
+                    input = ""
+                }
+            }) { Text("Добавить") }
+        }
+
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            items(tasks) { task -&gt;
+                ListItem(
+                    headlineContent = { Text(task) },
+                    modifier = Modifier.combinedClickable(
+                        onClick = {},
+                        onLongClick = { tasks.remove(task) }
+                    )
+                )
+            }
+        }
+    }
+}</code></pre>
+                <p><strong>Пояснение.</strong> <code>mutableStateListOf</code> — наблюдаемый список; пустые задачи отсекаются проверкой <code>isNotBlank()</code>; долгое нажатие удаляет задачу через <code>combinedClickable</code>.</p>
+            </details>
+        </div>
+
+        <h2>Задание 3 (продвинутое). Загрузка данных из сети с отображением состояний</h2>
+        <div class="exercise">
+            <p><strong>Формулировка.</strong> Разработать приложение, которое загружает список пользователей с API <code>https://jsonplaceholder.typicode.com/users</code>, отображает их в списке (имя и email), обрабатывает состояния загрузки и ошибки.</p>
+            <p><strong>Требования:</strong></p>
+            <ul>
+                <li>использовать Retrofit + корутины + Jetpack Compose;</li>
+                <li>смоделировать состояние через sealed-интерфейс <code>UiState</code> (Loading / Success / Error);</li>
+                <li>предусмотреть повторную загрузку при ошибке (кнопка «Повторить»);</li>
+                <li>код должен компилироваться и запускаться; при отсутствии сети отображается сообщение об ошибке.</li>
+            </ul>
+            <p><strong>Проверяемые умения и навыки:</strong> Retrofit, корутины, моделирование состояния, обработка ошибок сети, Compose-UI, архитектура MVVM.</p>
+            <details>
+                <summary>Показать пример выполнения (ключевые фрагменты)</summary>
+                <pre><code>data class UserDto(val id: Int, val name: String, val email: String)
+
+interface UsersApi {
+    @GET("users")
+    suspend fun getUsers(): List&lt;UserDto&gt;
+}
+
+sealed interface UiState {
+    data object Loading : UiState
+    data class Success(val users: List&lt;UserDto&gt;) : UiState
+    data class Error(val message: String) : UiState
+}
+
+class UsersViewModel(private val api: UsersApi) : ViewModel() {
+    private val _state = MutableStateFlow&lt;UiState&gt;(UiState.Loading)
+    val state: StateFlow&lt;UiState&gt; = _state.asStateFlow()
+
+    fun load() = viewModelScope.launch {
+        _state.value = UiState.Loading
+        _state.value = runCatching { api.getUsers() }
+            .fold(
+                onSuccess = { UiState.Success(it) },
+                onFailure = { UiState.Error(it.message ?: "Ошибка сети") }
+            )
+    }
+}
+
+@Composable
+fun UsersScreen(viewModel: UsersViewModel) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.load() }
+
+    when (val s = state) {
+        is UiState.Loading -&gt; CircularProgressIndicator()
+        is UiState.Error -&gt; Column {
+            Text(s.message)
+            Button(onClick = { viewModel.load() }) { Text("Повторить") }
+        }
+        is UiState.Success -&gt; LazyColumn {
+            items(s.users) { user -&gt;
+                ListItem(
+                    headlineContent = { Text(user.name) },
+                    supportingContent = { Text(user.email) }
+                )
+            }
+        }
+    }
+}</code></pre>
+                <p><strong>Пояснение.</strong> <code>UiState</code> исчерпывающе моделирует три состояния; <code>runCatching</code> обрабатывает сетевые ошибки; <code>LaunchedEffect</code> запускает загрузку при входе на экран; кнопка «Повторить» повторно вызывает <code>load()</code>. В реальном проекте ViewModel создаётся через фабрику с внедрением зависимости <code>UsersApi</code>.</p>
+            </details>
+        </div>
+
+        <h2>Итоговая таблица оценивания комплекса</h2>
+        <table>
+            <tr><th>Задание</th><th>Проверяемые умения/навыки</th><th>Макс. балл</th></tr>
+            <tr><td>1. Консольная обработка списка чисел</td><td>Синтаксис Kotlin, коллекции, функции высшего порядка, обработка ввода</td><td>5</td></tr>
+            <tr><td>2. To-Do List на Compose</td><td>Compose, управление состоянием, <code>LazyColumn</code>, обработка событий</td><td>5</td></tr>
+            <tr><td>3. Загрузка данных из сети</td><td>Retrofit, корутины, моделирование состояния, обработка ошибок, MVVM</td><td>5</td></tr>
+        </table>
+        <p><strong>Итоговая оценка</strong> — среднее арифметическое трёх оценок: 4,5–5,0 — «отлично»; 3,5–4,4 — «хорошо»; 2,5–3,4 — «удовлетворительно»; менее 2,5 — «неудовлетворительно».</p>
+
+        <p><a href="tests.html" class="btn">← Назад к тестам</a> <a href="literature.html" class="btn">Перейти к источникам →</a></p>
+    </main>
+
+</body>
+</html>

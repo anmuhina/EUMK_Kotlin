@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раздел 2. Разработка пользовательского интерфейса (Jetpack Compose)</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>ЭУМК Kotlin</h2>
+        <nav>
+            <a href="../index.html">Главная</a>
+            <a href="rup.html">Рабочая программа</a>
+            <a href="section1.html">Раздел 1. Основы Kotlin</a>
+            <a href="section2.html" class="active">Раздел 2. Jetpack Compose</a>
+            <a href="section3.html">Раздел 3. Room, Retrofit</a>
+            <a href="section4.html">Раздел 4. Тестирование</a>
+            <a href="tests.html">Тестовые задания</a>
+            <a href="practice.html">Практические задания</a>
+            <a href="literature.html">Список источников</a>
+            <a href="about.html">Об авторе</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Раздел 2. Разработка пользовательского интерфейса (Jetpack Compose)</h1>
+
+        <h2>2.1. От императивного UI к декларативному</h2>
+        <p>Традиционный подход Android (Views/XML) — <strong>императивный</strong>: разработчик создаёт дерево View и вручную изменяет его свойства при изменении данных (<code>textView.text = ...</code>). Это приводит к рассинхронизации состояния и UI, а также к большому количеству шаблонного кода.</p>
+        <p><strong>Jetpack Compose</strong> — декларативный UI-фреймворк, представленный Google в 2021 году. В Compose интерфейс описывается функциями, помеченными аннотацией <code>@Composable</code>, а UI автоматически перестраивается при изменении состояния. Формула декларативного подхода: <strong>UI = f(state)</strong>. Разработчик описывает, <em>как UI должен выглядеть при данном состоянии</em>, а фреймворк сам вычисляет минимальные изменения [3].</p>
+        <p>Преимущества Compose:</p>
+        <ul>
+            <li>меньше кода и отсутствие XML-разметки;</li>
+            <li>естественная реактивность: изменение состояния автоматически обновляет UI;</li>
+            <li>компонентность и переиспользуемость;</li>
+            <li>поддержка анимаций, тем, адаптивных layouts «из коробки»;</li>
+            <li>единый язык (Kotlin) для логики и UI.</li>
+        </ul>
+
+        <h2>2.2. Composable-функции и рекомпозиция</h2>
+        <p>Composable-функция — обычная функция с аннотацией <code>@Composable</code>. Она не возвращает View, а <strong>описывает</strong> элемент UI:</p>
+        <pre><code>@Composable
+fun Greeting(name: String) {
+    Text(text = "Привет, $name!")
+}</code></pre>
+        <p><strong>Рекомпозиция</strong> — повторный вызов composable-функции при изменении читаемого ею состояния. Compose отслеживает, какие функции читают какие состояния, и перезапускает только те, чьи зависимости изменились (так называемая «умная рекомпозиция»). Это обеспечивает высокую производительность.</p>
+        <p>Важное правило: composable-функции должны быть <strong>чистыми</strong> (без побочных эффектов). Для побочных эффектов (сетевые запросы, подписки) используются <code>LaunchedEffect</code>, <code>DisposableEffect</code>, <code>SideEffect</code>.</p>
+
+        <h2>2.3. Состояние: remember и mutableStateOf</h2>
+        <p>Состояние в Compose — это объект, изменение которого вызывает рекомпозицию. Базовый механизм:</p>
+        <pre><code>@Composable
+fun Counter() {
+    var count by remember { mutableStateOf(0) }
+    Column {
+        Text("Счётчик: $count")
+        Button(onClick = { count++ }) { Text("+1") }
+    }
+}</code></pre>
+        <ul>
+            <li><code>mutableStateOf(x)</code> создаёт наблюдаемое состояние.</li>
+            <li><code>remember { ... }</code> сохраняет объект между рекомпозициями.</li>
+            <li><code>by</code> — делегирование свойства (требует импорта <code>getValue</code>/<code>setValue</code>).</li>
+        </ul>
+        <p>Для состояния, которое должно переживать смену конфигурации (поворот экрана), используется <code>rememberSaveable</code>.</p>
+        <p><strong>Подъём состояния (state hoisting)</strong> — рекомендуемый паттерн: состояние поднимается в родительский composable, а дочерние получают значение и колбэк изменения. Это делает компоненты переиспользуемыми и тестируемыми.</p>
+        <pre><code>@Composable
+fun Parent() {
+    var text by remember { mutableStateOf("") }
+    Child(value = text, onValueChange = { text = it })
+}
+
+@Composable
+fun Child(value: String, onValueChange: (String) -&gt; Unit) {
+    TextField(value = value, onValueChange = onValueChange)
+}</code></pre>
+
+        <h2>2.4. Базовые компоненты и компоновки</h2>
+        <p>Основные UI-элементы: <code>Text</code>, <code>Button</code>, <code>TextField</code>, <code>Image</code>, <code>Icon</code>, <code>Checkbox</code>, <code>Switch</code>, <code>Slider</code>, <code>Card</code>.</p>
+        <p>Компоновки (layout):</p>
+        <ul>
+            <li><code>Row</code> — горизонтальное расположение;</li>
+            <li><code>Column</code> — вертикальное;</li>
+            <li><code>Box</code> — наложение элементов друг на друга;</li>
+            <li><code>LazyColumn</code> / <code>LazyRow</code> — ленивые списки (создают только видимые элементы, что критично для больших списков);</li>
+            <li><code>ConstraintLayout</code> — сложные ограничения (аналог XML ConstraintLayout).</li>
+        </ul>
+        <pre><code>LazyColumn {
+    items(users) { user -&gt;
+        ListItem(
+            headlineContent = { Text(user.name) },
+            supportingContent = { Text(user.email) }
+        )
+    }
+}</code></pre>
+        <p>Модификаторы (<code>Modifier</code>) управляют размерами, отступами, фоном, кликабельностью:</p>
+        <pre><code>Text(
+    "Заголовок",
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp)
+        .background(Color.LightGray)
+)</code></pre>
+
+        <h2>2.5. Навигация</h2>
+        <p>Навигация в Compose реализуется библиотекой <code>androidx.navigation:navigation-compose</code>. Экраны описываются маршрутами (строками), переходы — через <code>NavController</code>:</p>
+        <pre><code>val navController = rememberNavController()
+NavHost(navController, startDestination = "home") {
+    composable("home") {
+        Button(onClick = { navController.navigate("details/42") }) { Text("Открыть") }
+    }
+    composable("details/{id}") { backStackEntry -&gt;
+        val id = backStackEntry.arguments?.getString("id")
+        Text("Детали: $id")
+    }
+}</code></pre>
+        <p><code>NavHost</code> содержит граф навигации; <code>composable(route)</code> регистрирует экран; <code>navController.navigate(route)</code> выполняет переход; <code>popBackStack()</code> — возврат назад. Аргументы передаются через шаблон маршрута и извлекаются из <code>NavBackStackEntry</code>.</p>
+
+        <h2>2.6. Темизация и Material Design 3</h2>
+        <p>Compose поддерживает Material Design 3 через <code>MaterialTheme</code>, включающий цветовую схему (<code>colorScheme</code>), типографику (<code>typography</code>) и формы (<code>shapes</code>). Тёмная/светлая тема определяется через <code>isSystemInDarkTheme()</code>. Кастомизация темы выполняется в <code>Theme.kt</code>.</p>
+        <pre><code>@Composable
+fun MyAppTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -&gt; Unit) {
+    val colors = if (darkTheme) darkColorScheme() else lightColorScheme()
+    MaterialTheme(colorScheme = colors, content = content)
+}</code></pre>
+
+        <h2>2.7. Побочные эффекты и асинхронность в UI</h2>
+        <ul>
+            <li><code>LaunchedEffect(key)</code> — запускает корутину при входе в композицию и при изменении ключа.</li>
+            <li><code>DisposableEffect(key)</code> — выполняет код при входе и очистку при выходе.</li>
+            <li><code>rememberCoroutineScope()</code> — создаёт <code>CoroutineScope</code>, привязанный к композиции, для запуска корутин из обработчиков.</li>
+            <li><code>produceState</code> — преобразует асинхронный источник в состояние.</li>
+        </ul>
+        <pre><code>@Composable
+fun UserScreen(userId: String) {
+    var user by remember { mutableStateOf&lt;User?&gt;(null) }
+    LaunchedEffect(userId) {
+        user = repository.loadUser(userId)
+    }
+    user?.let { Text(it.name) }
+}</code></pre>
+
+        <h2>Контрольные вопросы</h2>
+        <div class="question">
+            <p><strong>1.</strong> Что такое рекомпозиция?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Повторный вызов composable-функции при изменении читаемого ею состояния.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>2.</strong> Зачем нужен <code>remember</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Сохраняет значение между рекомпозициями, чтобы состояние не сбрасывалось.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>3.</strong> Чем <code>Column</code> отличается от <code>Row</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>Column</code> располагает элементы вертикально, <code>Row</code> — горизонтально.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>4.</strong> Зачем нужен <code>LazyColumn</code>?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> Создаёт только видимые элементы списка — экономит память на больших списках.</div>
+            </details>
+        </div>
+        <div class="question">
+            <p><strong>5.</strong> Какой компонент отвечает за навигацию?</p>
+            <details>
+                <summary>Показать правильный ответ</summary>
+                <div class="answer"><strong>Ответ:</strong> <code>NavHost</code> и <code>NavController</code> из библиотеки navigation-compose.</div>
+            </details>
+        </div>
+
+        <h2>Упражнения для самостоятельной работы</h2>
+        <div class="exercise">
+            <p><strong>Упражнение 1.</strong> Сделайте экран: поле ввода, кнопка, текст под кнопкой. По нажатию текст из поля появляется в <code>Text</code>.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>@Composable
+fun SimpleInputScreen() {
+    var input by remember { mutableStateOf("") }
+    var shown by remember { mutableStateOf("") }
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TextField(value = input, onValueChange = { input = it }, label = { Text("Введите текст") })
+        Button(onClick = { shown = input }) { Text("Показать") }
+        Text(shown, style = MaterialTheme.typography.headlineMedium)
+    }
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 2.</strong> Выведите список из 10 элементов через <code>LazyColumn</code>.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>@Composable
+fun TenItemsList() {
+    val items = (1..10).map { "Элемент №$it" }
+    LazyColumn {
+        itemsIndexed(items) { index, title -&gt;
+            ListItem(
+                headlineContent = { Text(title) },
+                leadingContent = { Text("${index + 1}") }
+            )
+            HorizontalDivider()
+        }
+    }
+}</code></pre>
+            </details>
+        </div>
+        <div class="exercise">
+            <p><strong>Упражнение 3.</strong> Сделайте форму с логином и паролем и проверкой: логин не пустой, пароль не короче 6 символов.</p>
+            <details>
+                <summary>Показать пример решения</summary>
+                <pre><code>@Composable
+fun RegistrationForm() {
+    var login by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf&lt;String?&gt;(null) }
+
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TextField(login, { login = it }, label = { Text("Логин") })
+        TextField(password, { password = it }, label = { Text("Пароль") },
+            visualTransformation = PasswordVisualTransformation())
+        error?.let { Text(it, color = Color.Red) }
+        Button(onClick = {
+            error = when {
+                login.isBlank() -&gt; "Логин не может быть пустым"
+                password.length &lt; 6 -&gt; "Пароль должен быть не короче 6 символов"
+                else -&gt; null
+            }
+        }) { Text("Зарегистрироваться") }
+    }
+}</code></pre>
+            </details>
+        </div>
+
+        <p><a href="section1.html" class="btn">← Назад</a> <a href="section3.html" class="btn">Перейти к разделу 3 →</a></p>
+    </main>
+
+</body>
+</html>
